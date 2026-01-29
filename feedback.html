@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <!-- 视口设置：保证在手机端也能自适应显示 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XX中学学生会 - 意见反馈</title>
+
+  <!-- 引入思源黑体（Noto Sans SC 是思源黑体的 Google Fonts 版本） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- 引入 Tailwind CSS（CDN 版本） -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 引入 Axios（用于 AJAX 请求） -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+  <!-- 前后端联动：提交反馈到后端并存入数据库 -->
+  <script src="script.js"></script>
+
+  <!-- Tailwind 自定义配置：主色调蓝色 / 白色，字体设置为思源黑体（与首页一致） -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#2563eb',
+              light: '#60a5fa',
+              dark: '#1d4ed8'
+            }
+          },
+          fontFamily: {
+            sans: ['"Noto Sans SC"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif']
+          },
+          boxShadow: {
+            'soft': '0 10px 25px rgba(37, 99, 235, 0.15)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: "Noto Sans SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-gray-900">
+  <div class="min-h-screen flex flex-col">
+
+    <!-- 顶部导航栏（与 index.html 完全一致，链接指向对应页面） -->
+    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
+      <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center space-x-2">
+            <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-soft">
+              <span class="text-white font-bold text-lg">会</span>
+            </div>
+            <div>
+              <div class="text-lg sm:text-xl font-semibold text-primary-dark">XX中学学生会</div>
+              <div class="hidden sm:block text-xs text-gray-500">Student Union of XX Middle School</div>
+            </div>
+          </div>
+
+          <!-- 电脑端导航菜单 -->
+          <div class="hidden md:flex items-center space-x-6">
+            <a href="index.html"
+               class="relative text-sm font-medium text-gray-700 hover:text-primary transition duration-200 ease-out group">
+              首页
+              <span class="absolute left-0 -bottom-1 h-0.5 w-0 bg-primary group-hover:w-full transition-all duration-200"></span>
+            </a>
+            <a href="activities.html"
+               class="relative text-sm font-medium text-gray-700 hover:text-primary transition duration-200 ease-out group">
+              活动通知
+              <span class="absolute left-0 -bottom-1 h-0.5 w-0 bg-primary group-hover:w-full transition-all duration-200"></span>
+            </a>
+            <a href="members.html"
+               class="relative text-sm font-medium text-gray-700 hover:text-primary transition duration-200 ease-out group">
+              学生会成员
+              <span class="absolute left-0 -bottom-1 h-0.5 w-0 bg-primary group-hover:w-full transition-all duration-200"></span>
+            </a>
+            <!-- 意见反馈：当前页，高亮 -->
+            <a href="feedback.html"
+               class="relative inline-flex items-center justify-center px-4 py-2 rounded-full
+                      bg-primary text-white text-sm font-medium shadow-soft
+                      hover:bg-primary-dark hover:-translate-y-0.5 hover:shadow-lg
+                      active:translate-y-0 transition transform duration-200">
+              意见反馈
+            </a>
+          </div>
+
+          <!-- 手机端汉堡菜单按钮 -->
+          <div class="md:hidden">
+            <button
+              id="mobile-menu-button"
+              type="button"
+              class="inline-flex items-center justify-center p-2 rounded-md
+                     text-gray-700 hover:text-primary hover:bg-primary/10
+                     focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
+                     transform transition duration-150 hover:scale-105 active:scale-95"
+              aria-controls="mobile-menu"
+              aria-expanded="false"
+            >
+              <svg id="icon-menu" class="h-6 w-6 block" xmlns="http://www.w3.org/2000/svg" fill="none"
+                   viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <svg id="icon-close" class="h-6 w-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none"
+                   viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 手机端折叠菜单 -->
+        <div id="mobile-menu" class="md:hidden hidden border-t border-slate-200 pb-4">
+          <div class="pt-2 space-y-1">
+            <a href="index.html"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors duration-150">首页</a>
+            <a href="activities.html"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors duration-150">活动通知</a>
+            <a href="members.html"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors duration-150">学生会成员</a>
+            <a href="feedback.html"
+               class="block px-3 py-2 text-base font-medium text-primary hover:bg-primary/10 transition-colors duration-150">意见反馈</a>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- 主体内容：居中反馈表单 -->
+    <main class="flex-1 flex items-start justify-center px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
+      <section class="w-full max-w-xl mx-auto">
+        <!-- 页面标题与说明 -->
+        <div class="mb-6 sm:mb-8 text-center sm:text-left">
+          <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">意见反馈</h1>
+          <p class="text-sm sm:text-base text-gray-600">
+            如果你对学校或学生会的工作有任何建议、想法或困惑，欢迎在此留言，我们会认真查看并尽快回复。
+          </p>
+        </div>
+
+        <!-- 反馈表单容器：白底、圆角、阴影，与首页表单风格统一 -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:p-8">
+          <!-- 表单：姓名、邮箱、反馈内容均为必填；提交前做基础校验 -->
+          <form id="feedback-form" class="space-y-4" novalidate>
+            <!-- 姓名（必填） -->
+            <div>
+              <label for="feedback-name" class="block text-sm font-medium text-gray-700 mb-1">
+                姓名 <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="feedback-name"
+                name="name"
+                type="text"
+                required
+                autocomplete="name"
+                class="block w-full rounded-lg border border-slate-300 bg-slate-50
+                       px-3 py-2.5 text-sm sm:text-base text-gray-900
+                       focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+                       transition"
+                placeholder="请输入你的姓名"
+              />
+            </div>
+
+            <!-- 邮箱（必填；格式校验在 JS 中，错误时提示「请输入正确的邮箱格式」） -->
+            <div>
+              <label for="feedback-email" class="block text-sm font-medium text-gray-700 mb-1">
+                邮箱 <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="feedback-email"
+                name="email"
+                type="email"
+                required
+                autocomplete="email"
+                class="block w-full rounded-lg border border-slate-300 bg-slate-50
+                       px-3 py-2.5 text-sm sm:text-base text-gray-900
+                       focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+                       transition"
+                placeholder="例如：zhangsan@example.com"
+              />
+            </div>
+
+            <!-- 反馈内容（必填，多行输入） -->
+            <div>
+              <label for="feedback-content" class="block text-sm font-medium text-gray-700 mb-1">
+                反馈内容 <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                id="feedback-content"
+                name="content"
+                rows="5"
+                required
+                class="block w-full rounded-lg border border-slate-300 bg-slate-50
+                       px-3 py-2.5 text-sm sm:text-base text-gray-900
+                       focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+                       transition resize-none"
+                placeholder="请写下你的意见、建议或想法……"
+              ></textarea>
+            </div>
+
+            <!-- 提交按钮：样式与首页统一（圆角、主色、阴影），带 hover 悬浮效果 -->
+            <div class="pt-2">
+              <button
+                type="submit"
+                id="submit-btn"
+                class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-full
+                       bg-primary text-white text-sm sm:text-base font-medium shadow-soft
+                       hover:bg-primary-dark hover:-translate-y-0.5 hover:shadow-lg
+                       active:translate-y-0 transition transform duration-200"
+              >
+                提交反馈
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <!-- 页面底部（与 index.html 完全一致） -->
+    <footer class="bg-primary-dark text-white mt-auto">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div class="text-sm sm:text-base font-medium">XX中学学生会</div>
+        <div class="text-xs sm:text-sm text-slate-100">联系电话：12345678</div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // ===============================
+    // 1. 手机端汉堡菜单展开/收起
+    // ===============================
+    (function () {
+      var menuButton = document.getElementById('mobile-menu-button');
+      var mobileMenu = document.getElementById('mobile-menu');
+      var iconMenu = document.getElementById('icon-menu');
+      var iconClose = document.getElementById('icon-close');
+      if (!menuButton || !mobileMenu) return;
+
+      menuButton.addEventListener('click', function () {
+        var isHidden = mobileMenu.classList.contains('hidden');
+        if (isHidden) {
+          mobileMenu.classList.remove('hidden');
+          menuButton.setAttribute('aria-expanded', 'true');
+          iconMenu.classList.add('hidden');
+          iconClose.classList.remove('hidden');
+        } else {
+          mobileMenu.classList.add('hidden');
+          menuButton.setAttribute('aria-expanded', 'false');
+          iconMenu.classList.remove('hidden');
+          iconClose.classList.add('hidden');
+        }
+      });
+    })();
+
+    // ===============================
+    // 2. 反馈表单校验与提交
+    // ===============================
+    (function () {
+      var form = document.getElementById('feedback-form');
+      var nameEl = document.getElementById('feedback-name');
+      var emailEl = document.getElementById('feedback-email');
+      var contentEl = document.getElementById('feedback-content');
+
+      /** 简单邮箱格式校验：包含 @，且 @ 前后有非空字符，域名部分含至少一个点 */
+      function isValidEmail(str) {
+        if (typeof str !== 'string') return false;
+        var t = str.trim();
+        if (!t) return false;
+        var at = t.indexOf('@');
+        if (at <= 0 || at === t.length - 1) return false;
+        var local = t.slice(0, at).trim();
+        var domain = t.slice(at + 1).trim();
+        if (!local || !domain) return false;
+        if (domain.indexOf('.') === -1) return false;
+        return true;
+      }
+
+      /** 判断是否已填：去除首尾空格后非空 */
+      function isFilled(val) {
+        return typeof val === 'string' && val.trim().length > 0;
+      }
+
+      /** 清空表单三项内容（提交成功后调用） */
+      function clearForm() {
+        if (nameEl) nameEl.value = '';
+        if (emailEl) emailEl.value = '';
+        if (contentEl) contentEl.value = '';
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        var name = nameEl ? nameEl.value : '';
+        var email = emailEl ? emailEl.value : '';
+        var content = contentEl ? contentEl.value : '';
+
+        // 基础校验 1：未填完整 → 提示「请填写完整信息」
+        if (!isFilled(name) || !isFilled(email) || !isFilled(content)) {
+          alert('请填写完整信息');
+          return;
+        }
+
+        // 基础校验 2：邮箱格式错误 → 提示「请输入正确的邮箱格式」
+        if (!isValidEmail(email)) {
+          alert('请输入正确的邮箱格式');
+          return;
+        }
+
+        // 校验通过：使用 axios POST /api/submit_feedback，成功后提示并清空表单
+        var btn = document.getElementById('submit-btn');
+        if (btn) { btn.disabled = true; btn.textContent = '提交中…'; }
+        
+        submitFeedback({
+          name: name.trim(),
+          email: email.trim(),
+          content: content.trim()
+        })
+          .then(function (response) {
+            var data = (response && response.data) ? response.data : {};
+            if (data.success) {
+              alert('反馈提交成功，我们会尽快回复');
+              clearForm();
+            } else {
+              alert(data.message || '提交失败，请稍后重试');
+            }
+          })
+          .catch(function (error) {
+            console.error('提交反馈失败:', error);
+            var errorMsg = '提交失败，请检查网络或稍后重试';
+            if (error.response && error.response.data && error.response.data.message) {
+              errorMsg = error.response.data.message;
+            }
+            alert(errorMsg);
+          })
+          .finally(function () {
+            if (btn) { btn.disabled = false; btn.textContent = '提交反馈'; }
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# 学生会官网 Flask 后端依赖文件
+# 适配 Python 3.10+ 版本
+# 
+# 安装方法：在项目目录执行以下命令
+#   pip install -r requirements.txt
+# 或
+#   pip3 install -r requirements.txt
+#
+# 注意：sqlite3、smtplib、email、datetime、functools、re、os 等均为 Python 标准库，无需安装
+
+# Flask Web 框架（核心依赖）
+Flask>=3.0.0
+
+# Werkzeug（Flask 的底层 WSGI 工具库，用于密码哈希等功能）
+# 注意：Flask 会自动安装 Werkzeug，但明确列出可确保版本兼容性
+Werkzeug>=3.0.0

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <!-- 视口设置：保证在手机端也能自适应显示 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XX中学学生会 - 活动通知</title>
+
+  <!-- 引入思源黑体（Noto Sans SC 是思源黑体的 Google Fonts 版本） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- 引入 Tailwind CSS（CDN 版本） -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 引入 Axios（用于 AJAX 请求） -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+  <!-- 前后端联动：统一请求后端接口 -->
+  <script src="script.js"></script>
+
+  <!-- Tailwind 自定义配置：主色调蓝色 / 白色，字体设置为思源黑体 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#2563eb', // 主蓝色
+              light: '#60a5fa',   // 浅蓝
+              dark: '#1d4ed8'     // 深蓝
+            }
+          },
+          fontFamily: {
+            // 使用思源黑体（Noto Sans SC），并设置回退字体
+            sans: ['"Noto Sans SC"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif']
+          },
+          boxShadow: {
+            'soft': '0 10px 25px rgba(37, 99, 235, 0.15)' // 柔和蓝色阴影
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* 全局字体设置为思源黑体 */
+    body {
+      font-family: "Noto Sans SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-gray-900">
+  <!-- 整体页面容器：撑满屏幕高度，底部固定在最下方 -->
+  <div class="min-h-screen flex flex-col">
+
+    <!-- 顶部导航栏（与 index.html 基本一致，只调整了链接） -->
+    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
+      <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <!-- 左侧 Logo 与标题 -->
+          <div class="flex items-center space-x-2">
+            <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-soft">
+              <span class="text-white font-bold text-lg">会</span>
+            </div>
+            <div>
+              <div class="text-lg sm:text-xl font-semibold text-primary-dark">
+                XX中学学生会
+              </div>
+              <div class="hidden sm:block text-xs text-gray-500">
+                Student Union of XX Middle School
+              </div>
+            </div>
+          </div>
+
+          <!-- 电脑端导航菜单 -->
+          <div class="hidden md:flex items-center space-x-6">
+            <!-- 首页：跳转回 index.html -->
+            <a href="index.html"
+               class="relative text-sm font-medium text-gray-700 hover:text-primary transition
+                      duration-200 ease-out group">
+              首页
+              <span class="absolute left-0 -bottom-1 h-0.5 w-0 bg-primary group-hover:w-full transition-all duration-200"></span>
+            </a>
+
+            <!-- 活动通知：当前所在页面，可高亮显示 -->
+            <a href="activities.html"
+               class="relative text-sm font-medium text-primary transition
+                      duration-200 ease-out group">
+              活动通知
+              <!-- 当前页下划线默认展开 -->
+              <span class="absolute left-0 -bottom-1 h-0.5 w-full bg-primary transition-all duration-200"></span>
+            </a>
+
+            <!-- 学生会成员：跳转到 members.html -->
+            <a href="members.html"
+               class="relative text-sm font-medium text-gray-700 hover:text-primary transition
+                      duration-200 ease-out group">
+              学生会成员
+              <span class="absolute left-0 -bottom-1 h-0.5 w-0 bg-primary group-hover:w-full transition-all duration-200"></span>
+            </a>
+            <a href="feedback.html"
+               class="relative inline-flex items-center justify-center px-4 py-2 rounded-full
+                      bg-primary text-white text-sm font-medium
+                      shadow-soft
+                      hover:bg-primary-dark hover:-translate-y-0.5 hover:shadow-lg
+                      active:translate-y-0
+                      transition transform duration-200">
+              意见反馈
+            </a>
+          </div>
+
+          <!-- 手机端汉堡菜单按钮 -->
+          <div class="md:hidden">
+            <button
+              id="mobile-menu-button"
+              type="button"
+              class="inline-flex items-center justify-center p-2 rounded-md
+                     text-gray-700 hover:text-primary hover:bg-primary/10
+                     focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
+                     transform transition duration-150 hover:scale-105 active:scale-95"
+              aria-controls="mobile-menu"
+              aria-expanded="false"
+            >
+              <!-- 汉堡图标（默认显示） -->
+              <svg id="icon-menu" class="h-6 w-6 block" xmlns="http://www.w3.org/2000/svg" fill="none"
+                   viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <!-- 关闭图标（默认隐藏） -->
+              <svg id="icon-close" class="h-6 w-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none"
+                   viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 手机端折叠菜单内容 -->
+        <div id="mobile-menu" class="md:hidden hidden border-t border-slate-200 pb-4">
+          <div class="pt-2 space-y-1">
+            <!-- 首页：跳转 index.html -->
+            <a href="index.html"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-primary/10 hover:text-primary
+                      transition-colors duration-150">
+              首页
+            </a>
+            <!-- 活动通知：当前页面，可简单跳自己 -->
+            <a href="activities.html"
+               class="block px-3 py-2 text-base font-medium text-primary hover:bg-primary/10 hover:text-primary
+                      transition-colors duration-150">
+              活动通知
+            </a>
+            <!-- 学生会成员：跳转到 members.html -->
+            <a href="members.html"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-primary/10 hover:text-primary
+                      transition-colors duration-150">
+              学生会成员
+            </a>
+            <a href="feedback.html"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-primary/10 hover:text-primary
+                      transition-colors duration-150">
+              意见反馈
+            </a>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- 主体内容：活动筛选 + 活动列表 -->
+    <main class="flex-1">
+      <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
+        <!-- 页面标题和简介 -->
+        <div class="mb-6 sm:mb-8">
+          <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            活动通知
+          </h1>
+          <p class="text-sm sm:text-base text-gray-600">
+            在这里可以查看学生会组织的各类校园活动，包括尚未开始、正在进行和已经结束的活动信息。
+          </p>
+        </div>
+
+        <!-- 活动筛选按钮区域 -->
+        <!--
+          说明：
+          - 有 3 个筛选按钮：未开始 / 进行中 / 已结束
+          - data-filter 属性标记当前按钮对应的状态
+          - 通过 JS 给按钮加「选中」样式，并筛选活动卡片显示/隐藏
+        -->
+        <div class="mb-5 sm:mb-6">
+          <p class="text-xs sm:text-sm text-gray-500 mb-2">
+            点击下方按钮可以按「活动状态」筛选列表（默认显示全部活动）。
+          </p>
+
+          <div class="inline-flex flex-wrap gap-2 bg-white rounded-full px-2 py-1 border border-slate-200 shadow-sm">
+            <!-- 全部活动按钮 -->
+            <button
+              type="button"
+              class="filter-btn inline-flex items-center justify-center px-3 sm:px-4 py-1.5 rounded-full
+                     text-xs sm:text-sm font-medium
+                     bg-primary text-white shadow-soft
+                     hover:bg-primary-dark hover:-translate-y-0.5 hover:shadow-lg
+                     active:translate-y-0
+                     transition transform duration-200"
+              data-filter="all"
+            >
+              全部活动
+            </button>
+
+            <!-- 未开始按钮 -->
+            <button
+              type="button"
+              class="filter-btn inline-flex items-center justify-center px-3 sm:px-4 py-1.5 rounded-full
+                     text-xs sm:text-sm font-medium
+                     bg-white text-gray-700 border border-slate-200
+                     hover:bg-primary/5 hover:text-primary hover:-translate-y-0.5 hover:shadow-md
+                     active:translate-y-0
+                     transition transform duration-200"
+              data-filter="upcoming"
+            >
+              未开始
+            </button>
+
+            <!-- 进行中按钮 -->
+            <button
+              type="button"
+              class="filter-btn inline-flex items-center justify-center px-3 sm:px-4 py-1.5 rounded-full
+                     text-xs sm:text-sm font-medium
+                     bg-white text-gray-700 border border-slate-200
+                     hover:bg-primary/5 hover:text-primary hover:-translate-y-0.5 hover:shadow-md
+                     active:translate-y-0
+                     transition transform duration-200"
+              data-filter="ongoing"
+            >
+              进行中
+            </button>
+
+            <!-- 已结束按钮 -->
+            <button
+              type="button"
+              class="filter-btn inline-flex items-center justify-center px-3 sm:px-4 py-1.5 rounded-full
+                     text-xs sm:text-sm font-medium
+                     bg-white text-gray-700 border border-slate-200
+                     hover:bg-primary/5 hover:text-primary hover:-translate-y-0.5 hover:shadow-md
+                     active:translate-y-0
+                     transition transform duration-200"
+              data-filter="finished"
+            >
+              已结束
+            </button>
+          </div>
+        </div>
+
+        <!-- 活动列表：由 /api/get_activities 动态填充，筛选按钮逻辑见下方脚本 -->
+        <div id="activity-list" class="grid gap-4 sm:gap-5 md:grid-cols-2">
+          <div class="col-span-full py-8 text-center text-gray-500 text-sm">加载中…</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 页面底部（与 index.html 保持一致） -->
+    <footer class="bg-primary-dark text-white mt-2">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div class="text-sm sm:text-base font-medium">
+          XX中学学生会
+        </div>
+        <div class="text-xs sm:text-sm text-slate-100">
+          联系电话：12345678
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 页面交互逻辑（JavaScript） -->
+  <script>
+    // ===============================
+    // 1. 手机端汉堡菜单展开/收起
+    // ===============================
+    (function () {
+      var menuButton = document.getElementById('mobile-menu-button');
+      var mobileMenu = document.getElementById('mobile-menu');
+      var iconMenu = document.getElementById('icon-menu');
+      var iconClose = document.getElementById('icon-close');
+
+      if (!menuButton || !mobileMenu) return;
+
+      menuButton.addEventListener('click', function () {
+        var isHidden = mobileMenu.classList.contains('hidden');
+
+        if (isHidden) {
+          mobileMenu.classList.remove('hidden');
+          menuButton.setAttribute('aria-expanded', 'true');
+          iconMenu.classList.add('hidden');
+          iconClose.classList.remove('hidden');
+        } else {
+          mobileMenu.classList.add('hidden');
+          menuButton.setAttribute('aria-expanded', 'false');
+          iconMenu.classList.remove('hidden');
+          iconClose.classList.add('hidden');
+        }
+      });
+    })();
+
+    // ===============================
+    // 2. 从后端加载活动列表 + 筛选按钮逻辑
+    // ===============================
+    (function () {
+      var activityList = document.getElementById('activity-list');
+      var filterButtons = document.querySelectorAll('.filter-btn');
+      var statusText = { upcoming: '未开始', ongoing: '进行中', finished: '已结束' };
+      var statusClass = { upcoming: 'bg-primary/90', ongoing: 'bg-emerald-500', finished: 'bg-slate-600' };
+      var defaultImg = 'https://images.pexels.com/photos/3184296/pexels-photo-3184296.jpeg?auto=compress&cs=tinysrgb&w=1200';
+
+      function esc(s) { if (s == null) return ''; return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+      function updateButtonStyles(activeFilter) {
+        filterButtons.forEach(function (btn) {
+          var f = btn.getAttribute('data-filter');
+          btn.classList.remove('bg-primary', 'text-white', 'shadow-soft', 'bg-white', 'text-gray-700', 'border', 'border-slate-200');
+          if (f === activeFilter) btn.classList.add('bg-primary', 'text-white', 'shadow-soft');
+          else btn.classList.add('bg-white', 'text-gray-700', 'border', 'border-slate-200');
+        });
+      }
+
+      function filterActivities(filter) {
+        var cards = document.querySelectorAll('.activity-card');
+        cards.forEach(function (card) {
+          card.classList.remove('hidden');
+          if (filter !== 'all' && card.getAttribute('data-status') !== filter) card.classList.add('hidden');
+        });
+      }
+
+      function initFilter() {
+        var currentFilter = 'all';
+        updateButtonStyles(currentFilter);
+        filterActivities(currentFilter);
+        filterButtons.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var s = btn.getAttribute('data-filter');
+            if (!s || s === currentFilter) return;
+            currentFilter = s;
+            updateButtonStyles(currentFilter);
+            filterActivities(currentFilter);
+          });
+        });
+      }
+
+      getActivities()
+        .then(function (response) {
+          var arr = (response && response.data) ? response.data : [];
+          if (!activityList) return;
+          if (!arr || !arr.length) {
+            activityList.innerHTML = '<div class="col-span-full py-8 text-center text-gray-500 text-sm">暂无活动</div>';
+            return;
+          }
+          var html = arr.map(function (a) {
+            var img = a.image_url || defaultImg;
+            var st = a.status || 'upcoming';
+            var badge = statusText[st] || st;
+            var cls = statusClass[st] || 'bg-primary/90';
+            var title = esc(a.title);
+            var time = esc(a.start_time || '');
+            var desc = esc(a.description || '');
+            return '<article class="activity-card bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition duration-200 flex flex-col" data-status="' + esc(st) + '"><div class="h-40 sm:h-44 bg-slate-200 relative overflow-hidden"><div class="w-full h-full bg-cover bg-center" style="background-image:url(\'' + esc(img) + '\')"></div><div class="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent"></div><span class="absolute left-3 top-3 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ' + cls + ' text-white">' + badge + '</span></div><div class="p-4 sm:p-5 flex-1 flex flex-col"><h2 class="text-sm sm:text-base font-semibold text-gray-900 mb-1.5">' + title + '</h2><p class="text-xs text-gray-500 mb-2">活动时间：' + time + '</p><p class="text-xs sm:text-sm text-gray-600 flex-1">' + desc + '</p></div></article>';
+          }).join('');
+          activityList.innerHTML = html;
+          initFilter();
+        })
+        .catch(function (error) {
+          console.error('加载活动失败:', error);
+          if (activityList) activityList.innerHTML = '<div class="col-span-full py-8 text-center text-gray-500 text-sm">加载失败，请刷新重试</div>';
+        });
+    })();
+  </script>
+</body>
+</html>

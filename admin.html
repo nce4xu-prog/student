@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XX中学学生会 - 后台管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#2563eb', light: '#60a5fa', dark: '#1d4ed8' } },
+          fontFamily: { sans: ['"Noto Sans SC"', 'system-ui', 'sans-serif'] },
+          boxShadow: { 'soft': '0 10px 25px rgba(37, 99, 235, 0.15)' }
+        }
+      }
+    }
+  </script>
+  <style> body { font-family: "Noto Sans SC", system-ui, sans-serif; } </style>
+</head>
+<body class="bg-slate-50 text-gray-900 min-h-screen">
+  <!-- 登录页 -->
+  <div id="login-page" class="min-h-screen flex items-center justify-center px-4">
+    <div class="w-full max-w-sm bg-white rounded-2xl shadow-soft border border-slate-200 p-6 sm:p-8">
+      <h1 class="text-xl font-bold text-gray-900 mb-2">后台管理登录</h1>
+      <p class="text-sm text-gray-500 mb-6">默认账号 admin，密码 123456</p>
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+          <input id="login-username" type="text" required value="admin"
+                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+          <input id="login-password" type="password" required value="123456"
+                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary" />
+        </div>
+        <p id="login-error" class="text-sm text-red-500 hidden"></p>
+        <button type="submit" class="w-full rounded-full bg-primary text-white py-2.5 text-sm font-medium shadow-soft hover:bg-primary-dark hover:-translate-y-0.5 transition">
+          登录
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 管理后台 -->
+  <div id="admin-page" class="hidden min-h-screen flex flex-col">
+    <header class="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex items-center justify-between">
+      <h1 class="text-lg font-semibold text-primary-dark">XX中学学生会 · 后台管理</h1>
+      <div class="flex items-center gap-4">
+        <a href="/" class="text-sm text-gray-600 hover:text-primary">返回官网</a>
+        <button id="btn-logout" type="button" class="text-sm text-gray-600 hover:text-primary">退出登录</button>
+      </div>
+    </header>
+    <div class="flex-1 flex flex-col sm:flex-row">
+      <aside class="w-full sm:w-48 border-b sm:border-b-0 sm:border-r border-slate-200 bg-white p-4 flex flex-row sm:flex-col gap-2">
+        <button type="button" data-tab="notices" class="admin-tab rounded-lg px-3 py-2 text-sm font-medium text-left bg-primary text-white">通知管理</button>
+        <button type="button" data-tab="activities" class="admin-tab rounded-lg px-3 py-2 text-sm font-medium text-left text-gray-700 hover:bg-slate-100">活动管理</button>
+        <button type="button" data-tab="members" class="admin-tab rounded-lg px-3 py-2 text-sm font-medium text-left text-gray-700 hover:bg-slate-100">成员管理</button>
+        <button type="button" data-tab="feedback" class="admin-tab rounded-lg px-3 py-2 text-sm font-medium text-left text-gray-700 hover:bg-slate-100">反馈查看</button>
+      </aside>
+      <main class="flex-1 p-4 sm:p-6 overflow-auto">
+        <div id="panel-notices" class="admin-panel space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">通知管理</h2>
+            <button type="button" id="btn-add-notice" class="rounded-full bg-primary text-white px-4 py-2 text-sm font-medium hover:bg-primary-dark transition">新增通知</button>
+          </div>
+          <div id="notices-list" class="bg-white rounded-xl border border-slate-200 overflow-hidden"></div>
+        </div>
+        <div id="panel-activities" class="admin-panel hidden space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">活动管理</h2>
+            <button type="button" id="btn-add-activity" class="rounded-full bg-primary text-white px-4 py-2 text-sm font-medium hover:bg-primary-dark transition">新增活动</button>
+          </div>
+          <div id="activities-list" class="bg-white rounded-xl border border-slate-200 overflow-hidden"></div>
+        </div>
+        <div id="panel-members" class="admin-panel hidden space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">成员管理</h2>
+            <button type="button" id="btn-add-member" class="rounded-full bg-primary text-white px-4 py-2 text-sm font-medium hover:bg-primary-dark transition">新增成员</button>
+          </div>
+          <div id="members-list" class="bg-white rounded-xl border border-slate-200 overflow-hidden"></div>
+        </div>
+        <div id="panel-feedback" class="admin-panel hidden space-y-4">
+          <h2 class="text-lg font-semibold text-gray-900">反馈查看（只读）</h2>
+          <div id="feedback-list" class="bg-white rounded-xl border border-slate-200 overflow-hidden"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- 弹窗：新增/编辑 通知 -->
+  <div id="modal-notice" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6">
+      <h3 id="modal-notice-title" class="text-lg font-semibold mb-4">新增通知</h3>
+      <form id="form-notice" class="space-y-4">
+        <input type="hidden" id="notice-id" />
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">标题</label>
+          <input type="text" id="notice-title" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">内容</label>
+          <textarea id="notice-content" rows="4" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm resize-none"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">发布时间（如 2026-03-01）</label>
+          <input type="text" id="notice-publish-time" required placeholder="2026-03-01" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div class="flex gap-2 justify-end pt-2">
+          <button type="button" id="btn-notice-cancel" class="px-4 py-2 rounded-lg border border-slate-300 text-sm">取消</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-primary text-white text-sm hover:bg-primary-dark">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 弹窗：新增/编辑 活动 -->
+  <div id="modal-activity" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 my-8">
+      <h3 id="modal-activity-title" class="text-lg font-semibold mb-4">新增活动</h3>
+      <form id="form-activity" class="space-y-4">
+        <input type="hidden" id="activity-id" />
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">标题</label>
+          <input type="text" id="activity-title" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">简介</label>
+          <textarea id="activity-description" rows="3" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm resize-none"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">活动时间（如 2026-03-25 14:00 - 17:30）</label>
+          <input type="text" id="activity-start-time" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">结束时间（可与开始相同）</label>
+          <input type="text" id="activity-end-time" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+          <select id="activity-status" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <option value="upcoming">未开始</option>
+            <option value="ongoing">进行中</option>
+            <option value="finished">已结束</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">图片链接（可选）</label>
+          <input type="text" id="activity-image-url" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="https://..." />
+        </div>
+        <div class="flex gap-2 justify-end pt-2">
+          <button type="button" id="btn-activity-cancel" class="px-4 py-2 rounded-lg border border-slate-300 text-sm">取消</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-primary text-white text-sm hover:bg-primary-dark">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 弹窗：新增/编辑 成员 -->
+  <div id="modal-member" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 my-8">
+      <h3 id="modal-member-title" class="text-lg font-semibold mb-4">新增成员</h3>
+      <form id="form-member" class="space-y-4">
+        <input type="hidden" id="member-id" />
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+          <input type="text" id="member-name" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">部门（如 主席团、学习部、文体部）</label>
+          <input type="text" id="member-department" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">职务（如 部长、干事）</label>
+          <input type="text" id="member-role" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">简介</label>
+          <textarea id="member-intro" rows="3" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm resize-none"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">图片链接（可选）</label>
+          <input type="text" id="member-image-url" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="https://..." />
+        </div>
+        <div class="flex gap-2 justify-end pt-2">
+          <button type="button" id="btn-member-cancel" class="px-4 py-2 rounded-lg border border-slate-300 text-sm">取消</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-primary text-white text-sm hover:bg-primary-dark">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var loginPage = document.getElementById('login-page');
+      var adminPage = document.getElementById('admin-page');
+      var loginForm = document.getElementById('login-form');
+      var loginError = document.getElementById('login-error');
+      var loginUsername = document.getElementById('login-username');
+      var loginPassword = document.getElementById('login-password');
+
+      function showLogin() {
+        loginPage.classList.remove('hidden');
+        loginPage.classList.add('flex');
+        adminPage.classList.add('hidden');
+      }
+      function showAdmin() {
+        loginPage.classList.add('hidden');
+        loginPage.classList.remove('flex');
+        adminPage.classList.remove('hidden');
+        adminPage.classList.add('flex');
+        loadNotices(); loadActivities(); loadMembers(); loadFeedback();
+      }
+
+      function api(url, opts) {
+        opts = opts || {};
+        opts.headers = opts.headers || {};
+        opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'application/json';
+        opts.credentials = 'same-origin';
+        return fetch(url, opts).then(function (r) {
+          if (r.status === 401) { showLogin(); return Promise.reject(new Error('未登录')); }
+          return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || '请求失败'); return j; });
+        });
+      }
+
+      loginForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        loginError.classList.add('hidden');
+        api('/api/admin_login', {
+          method: 'POST',
+          body: JSON.stringify({ username: loginUsername.value.trim(), password: loginPassword.value })
+        }).then(function () { showAdmin(); }).catch(function (err) {
+          loginError.textContent = err.message || '登录失败';
+          loginError.classList.remove('hidden');
+        });
+      });
+
+      document.getElementById('btn-logout').addEventListener('click', function () {
+        api('/api/admin_logout', { method: 'POST' }).then(function () { showLogin(); }).catch(function () { showLogin(); });
+      });
+
+      api('/api/admin/check').then(function (r) {
+        if (r.logged_in) showAdmin(); else showLogin();
+      }).catch(function () { showLogin(); });
+
+      /* 选项卡 */
+      var tabs = document.querySelectorAll('.admin-tab');
+      var panels = document.querySelectorAll('.admin-panel');
+      tabs.forEach(function (t) {
+        t.addEventListener('click', function () {
+          var tab = t.getAttribute('data-tab');
+          tabs.forEach(function (x) {
+            x.classList.remove('bg-primary', 'text-white');
+            x.classList.add('text-gray-700');
+          });
+          t.classList.add('bg-primary', 'text-white');
+          t.classList.remove('text-gray-700');
+          panels.forEach(function (p) {
+            var pid = p.id;
+            if ((pid === 'panel-notices' && tab === 'notices') || (pid === 'panel-activities' && tab === 'activities') || (pid === 'panel-members' && tab === 'members') || (pid === 'panel-feedback' && tab === 'feedback')) {
+              p.classList.remove('hidden');
+            } else {
+              p.classList.add('hidden');
+            }
+          });
+        });
+      });
+
+      /* 通知 */
+      var noticesList = document.getElementById('notices-list');
+      function loadNotices() {
+        api('/api/admin/notices').then(function (arr) {
+          if (!arr.length) { noticesList.innerHTML = '<div class="p-6 text-gray-500 text-sm">暂无通知</div>'; return; }
+          noticesList.innerHTML = '<ul class="divide-y divide-slate-100">' + arr.map(function (n) {
+            return '<li class="px-4 py-3 flex items-center justify-between gap-4"><div class="min-w-0 flex-1"><p class="font-medium text-gray-900 truncate">' + escapeHtml(n.title) + '</p><p class="text-xs text-gray-500">' + escapeHtml(n.publish_time) + '</p></div><div class="flex shrink-0 gap-2"><button type="button" class="btn-edit-notice px-3 py-1 rounded-lg border border-slate-300 text-xs hover:bg-slate-50" data-id="' + n.id + '">编辑</button><button type="button" class="btn-delete-notice px-3 py-1 rounded-lg border border-red-200 text-red-600 text-xs hover:bg-red-50" data-id="' + n.id + '">删除</button></div></li>';
+          }).join('') + '</ul>';
+          noticesList.querySelectorAll('.btn-edit-notice').forEach(function (b) {
+            b.addEventListener('click', function () { openNoticeModal(Number(b.getAttribute('data-id'))); });
+          });
+          noticesList.querySelectorAll('.btn-delete-notice').forEach(function (b) {
+            b.addEventListener('click', function () {
+              if (!confirm('确定删除这条通知？')) return;
+              api('/api/admin/notices/' + b.getAttribute('data-id'), { method: 'DELETE' }).then(loadNotices).catch(alert);
+            });
+          });
+        }).catch(function () {});
+      }
+      function escapeHtml(s) { if (s == null) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+      function openNoticeModal(id) {
+        var m = document.getElementById('modal-notice');
+        var title = document.getElementById('modal-notice-title');
+        var form = document.getElementById('form-notice');
+        document.getElementById('notice-id').value = id || '';
+        document.getElementById('notice-title').value = '';
+        document.getElementById('notice-content').value = '';
+        document.getElementById('notice-publish-time').value = '';
+        if (id) {
+          title.textContent = '编辑通知';
+          api('/api/admin/notices').then(function (arr) {
+            var n = arr.find(function (x) { return x.id === id; });
+            if (n) {
+              document.getElementById('notice-id').value = n.id;
+              document.getElementById('notice-title').value = n.title || '';
+              document.getElementById('notice-content').value = n.content || '';
+              document.getElementById('notice-publish-time').value = n.publish_time || '';
+            }
+          });
+        } else title.textContent = '新增通知';
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+      }
+      function closeNoticeModal() {
+        document.getElementById('modal-notice').classList.add('hidden');
+        document.getElementById('modal-notice').classList.remove('flex');
+      }
+      document.getElementById('btn-add-notice').addEventListener('click', function () { openNoticeModal(null); });
+      document.getElementById('btn-notice-cancel').addEventListener('click', closeNoticeModal);
+      document.getElementById('form-notice').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var id = document.getElementById('notice-id').value;
+        var payload = { title: document.getElementById('notice-title').value.trim(), content: document.getElementById('notice-content').value.trim(), publish_time: document.getElementById('notice-publish-time').value.trim() };
+        var p = id ? api('/api/admin/notices/' + id, { method: 'PUT', body: JSON.stringify(payload) }) : api('/api/admin/notices', { method: 'POST', body: JSON.stringify(payload) });
+        p.then(function () { closeNoticeModal(); loadNotices(); }).catch(alert);
+      });
+
+      /* 活动 */
+      var activitiesList = document.getElementById('activities-list');
+      var statusText = { upcoming: '未开始', ongoing: '进行中', finished: '已结束' };
+      function loadActivities() {
+        api('/api/admin/activities').then(function (arr) {
+          if (!arr.length) { activitiesList.innerHTML = '<div class="p-6 text-gray-500 text-sm">暂无活动</div>'; return; }
+          activitiesList.innerHTML = '<ul class="divide-y divide-slate-100">' + arr.map(function (a) {
+            return '<li class="px-4 py-3 flex items-center justify-between gap-4"><div class="min-w-0 flex-1"><p class="font-medium text-gray-900 truncate">' + escapeHtml(a.title) + '</p><p class="text-xs text-gray-500">' + (statusText[a.status] || a.status) + ' · ' + escapeHtml(a.start_time || '') + '</p></div><div class="flex shrink-0 gap-2"><button type="button" class="btn-edit-activity px-3 py-1 rounded-lg border border-slate-300 text-xs hover:bg-slate-50" data-id="' + a.id + '">编辑</button><button type="button" class="btn-delete-activity px-3 py-1 rounded-lg border border-red-200 text-red-600 text-xs hover:bg-red-50" data-id="' + a.id + '">删除</button></div></li>';
+          }).join('') + '</ul>';
+          activitiesList.querySelectorAll('.btn-edit-activity').forEach(function (b) {
+            b.addEventListener('click', function () { openActivityModal(Number(b.getAttribute('data-id'))); });
+          });
+          activitiesList.querySelectorAll('.btn-delete-activity').forEach(function (b) {
+            b.addEventListener('click', function () {
+              if (!confirm('确定删除该活动？')) return;
+              api('/api/admin/activities/' + b.getAttribute('data-id'), { method: 'DELETE' }).then(loadActivities).catch(alert);
+            });
+          });
+        }).catch(function () {});
+      }
+      function openActivityModal(id) {
+        var m = document.getElementById('modal-activity');
+        var title = document.getElementById('modal-activity-title');
+        document.getElementById('activity-id').value = id || '';
+        document.getElementById('activity-title').value = '';
+        document.getElementById('activity-description').value = '';
+        document.getElementById('activity-start-time').value = '';
+        document.getElementById('activity-end-time').value = '';
+        document.getElementById('activity-status').value = 'upcoming';
+        document.getElementById('activity-image-url').value = '';
+        if (id) {
+          title.textContent = '编辑活动';
+          api('/api/admin/activities').then(function (arr) {
+            var a = arr.find(function (x) { return x.id === id; });
+            if (a) {
+              document.getElementById('activity-id').value = a.id;
+              document.getElementById('activity-title').value = a.title || '';
+              document.getElementById('activity-description').value = a.description || '';
+              document.getElementById('activity-start-time').value = a.start_time || '';
+              document.getElementById('activity-end-time').value = a.end_time || '';
+              document.getElementById('activity-status').value = a.status || 'upcoming';
+              document.getElementById('activity-image-url').value = a.image_url || '';
+            }
+          });
+        } else title.textContent = '新增活动';
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+      }
+      function closeActivityModal() {
+        var m = document.getElementById('modal-activity');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+      }
+      document.getElementById('btn-add-activity').addEventListener('click', function () { openActivityModal(null); });
+      document.getElementById('btn-activity-cancel').addEventListener('click', closeActivityModal);
+      document.getElementById('form-activity').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var id = document.getElementById('activity-id').value;
+        var payload = {
+          title: document.getElementById('activity-title').value.trim(),
+          description: document.getElementById('activity-description').value.trim(),
+          start_time: document.getElementById('activity-start-time').value.trim(),
+          end_time: document.getElementById('activity-end-time').value.trim(),
+          status: document.getElementById('activity-status').value,
+          image_url: document.getElementById('activity-image-url').value.trim()
+        };
+        var p = id ? api('/api/admin/activities/' + id, { method: 'PUT', body: JSON.stringify(payload) }) : api('/api/admin/activities', { method: 'POST', body: JSON.stringify(payload) });
+        p.then(function () { closeActivityModal(); loadActivities(); }).catch(alert);
+      });
+
+      /* 成员 */
+      var membersList = document.getElementById('members-list');
+      function loadMembers() {
+        api('/api/admin/members').then(function (arr) {
+          if (!arr.length) { membersList.innerHTML = '<div class="p-6 text-gray-500 text-sm">暂无成员</div>'; return; }
+          membersList.innerHTML = '<ul class="divide-y divide-slate-100">' + arr.map(function (m) {
+            return '<li class="px-4 py-3 flex items-center justify-between gap-4"><div class="min-w-0 flex-1"><p class="font-medium text-gray-900">' + escapeHtml(m.name) + '</p><p class="text-xs text-gray-500">' + escapeHtml(m.department) + ' · ' + escapeHtml(m.role) + '</p></div><div class="flex shrink-0 gap-2"><button type="button" class="btn-edit-member px-3 py-1 rounded-lg border border-slate-300 text-xs hover:bg-slate-50" data-id="' + m.id + '">编辑</button><button type="button" class="btn-delete-member px-3 py-1 rounded-lg border border-red-200 text-red-600 text-xs hover:bg-red-50" data-id="' + m.id + '">删除</button></div></li>';
+          }).join('') + '</ul>';
+          membersList.querySelectorAll('.btn-edit-member').forEach(function (b) {
+            b.addEventListener('click', function () { openMemberModal(Number(b.getAttribute('data-id'))); });
+          });
+          membersList.querySelectorAll('.btn-delete-member').forEach(function (b) {
+            b.addEventListener('click', function () {
+              if (!confirm('确定删除该成员？')) return;
+              api('/api/admin/members/' + b.getAttribute('data-id'), { method: 'DELETE' }).then(loadMembers).catch(alert);
+            });
+          });
+        }).catch(function () {});
+      }
+      function openMemberModal(id) {
+        var m = document.getElementById('modal-member');
+        var title = document.getElementById('modal-member-title');
+        document.getElementById('member-id').value = id || '';
+        document.getElementById('member-name').value = '';
+        document.getElementById('member-department').value = '';
+        document.getElementById('member-role').value = '';
+        document.getElementById('member-intro').value = '';
+        document.getElementById('member-image-url').value = '';
+        if (id) {
+          title.textContent = '编辑成员';
+          api('/api/admin/members').then(function (arr) {
+            var x = arr.find(function (a) { return a.id === id; });
+            if (x) {
+              document.getElementById('member-id').value = x.id;
+              document.getElementById('member-name').value = x.name || '';
+              document.getElementById('member-department').value = x.department || '';
+              document.getElementById('member-role').value = x.role || '';
+              document.getElementById('member-intro').value = x.intro || '';
+              document.getElementById('member-image-url').value = x.image_url || '';
+            }
+          });
+        } else title.textContent = '新增成员';
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+      }
+      function closeMemberModal() {
+        var m = document.getElementById('modal-member');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+      }
+      document.getElementById('btn-add-member').addEventListener('click', function () { openMemberModal(null); });
+      document.getElementById('btn-member-cancel').addEventListener('click', closeMemberModal);
+      document.getElementById('form-member').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var id = document.getElementById('member-id').value;
+        var payload = {
+          name: document.getElementById('member-name').value.trim(),
+          department: document.getElementById('member-department').value.trim(),
+          role: document.getElementById('member-role').value.trim(),
+          intro: document.getElementById('member-intro').value.trim(),
+          image_url: document.getElementById('member-image-url').value.trim()
+        };
+        var p = id ? api('/api/admin/members/' + id, { method: 'PUT', body: JSON.stringify(payload) }) : api('/api/admin/members', { method: 'POST', body: JSON.stringify(payload) });
+        p.then(function () { closeMemberModal(); loadMembers(); }).catch(alert);
+      });
+
+      /* 反馈（只读） */
+      var feedbackList = document.getElementById('feedback-list');
+      function loadFeedback() {
+        api('/api/admin/feedback').then(function (arr) {
+          if (!arr.length) { feedbackList.innerHTML = '<div class="p-6 text-gray-500 text-sm">暂无反馈</div>'; return; }
+          feedbackList.innerHTML = '<ul class="divide-y divide-slate-100">' + arr.map(function (f) {
+            return '<li class="px-4 py-3"><p class="font-medium text-gray-900">' + escapeHtml(f.name) + ' &lt;' + escapeHtml(f.email) + '&gt;</p><p class="text-xs text-gray-500 mt-1">' + escapeHtml(f.created_at) + '</p><p class="text-sm text-gray-600 mt-2">' + escapeHtml(f.content) + '</p></li>';
+          }).join('') + '</ul>';
+        }).catch(function () {});
+      }
+    })();
+  </script>
+</body>
+</html>

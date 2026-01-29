@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <!-- 视口设置：保证在手机端也能自适应显示 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XX中学学生会官网</title>
+
+  <!-- 引入思源黑体（Noto Sans SC 是思源黑体的 Google Fonts 版本） -->
+  <!-- 有网络时会自动加载字体，没网时会退回到系统无衬线字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- 引入 Tailwind CSS（CDN 版本，适合快速开发和学习） -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 引入 Axios（用于 AJAX 请求） -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+  <!-- 前后端联动：统一请求后端接口，解决跨域 -->
+  <script src="script.js"></script>
+
+  <!-- Tailwind 自定义配置：主色调蓝色 / 白色，字体设置为思源黑体 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#2563eb', // 主蓝色
+              light: '#60a5fa',   // 浅蓝
+              dark: '#1d4ed8'     // 深蓝
+            }
+          },
+          fontFamily: {
+            // 使用思源黑体（Noto Sans SC），并设置回退字体
+            sans: ['"Noto Sans SC"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif']
+          },
+          boxShadow: {
+            'soft': '0 10px 25px rgba(37, 99, 235, 0.15)' // 柔和蓝色阴影
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* 给整个页面设置全局字体（思源黑体） */
+    body {
+      font-family: "Noto Sans SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-gray-900">
+  <!-- 整体页面容器 -->
+  <div class="min-h-screen flex flex-col">
+
+    <!-- 顶部导航栏 -->
+    <!-- 使用 sticky 固定在页面顶部，方便滚动时仍能看到导航 -->
+    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
+      <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <!-- 左侧 Logo 与标题 -->
+          <div class="flex items-center space-x-2">
+            <!-- 简单的圆形 Logo 占位，可以后面替换成图片 -->
+            <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-soft">
+              <span class="text-white font-bold text-lg">会</span>
+            </div>
+            <div>
+              <div class="text-lg sm:text-xl font-semibold text-primary-dark">
+                XX中学学生会
+              </div>
+              <div class="hidden sm:block text-xs text-gray-500">
+                Student Union of XX Middle School
+              </div>
+            </div>
+          </div>
+
+          <!-- 电脑端导航菜单（md 及以上设备显示） -->
+          <div class="hidden md:flex items-center space-x-6">
+            <!-- 每个导航条目都加了 hover 动画：轻微上移 + 颜色变化 + 下划线 -->
+            <a href="index.html"
+               class="relative text-sm font-medium text-gray-700 hover:text-primary transition
+                      duration-200 ease-out group">
+              首页
+              <span class="absolute left-0 -bottom-1 h-0.5 w-0 bg-primary group-hover:w-full transition-all duration-200"></span>
+            </a>
+            <a href="activities.html"
+               class="relative text-sm font-medium text-gray-700 hover:text-primary transition
+                      duration-200 ease-out group">
+              活动通知
+              <span class="absolute left-0 -bottom-1 h-0.5 w-0 bg-primary group-hover:w-full transition-all duration-200"></span>
+            </a>
+            <a href="members.html"
+               class="relative text-sm font-medium text-gray-700 hover:text-primary transition
+                      duration-200 ease-out group">
+              学生会成员
+              <span class="absolute left-0 -bottom-1 h-0.5 w-0 bg-primary group-hover:w-full transition-all duration-200"></span>
+            </a>
+            <a href="feedback.html"
+               class="relative inline-flex items-center justify-center px-4 py-2 rounded-full
+                      bg-primary text-white text-sm font-medium
+                      shadow-soft
+                      hover:bg-primary-dark hover:-translate-y-0.5 hover:shadow-lg
+                      active:translate-y-0
+                      transition transform duration-200">
+              意见反馈
+            </a>
+          </div>
+
+          <!-- 手机端汉堡菜单按钮（md 以下设备显示） -->
+          <div class="md:hidden">
+            <!--
+              按钮加了 data- 属性，便于 JavaScript 绑定点击事件
+              hover:scale + active:scale 做轻微缩放动画
+            -->
+            <button
+              id="mobile-menu-button"
+              type="button"
+              class="inline-flex items-center justify-center p-2 rounded-md
+                     text-gray-700 hover:text-primary hover:bg-primary/10
+                     focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
+                     transform transition duration-150 hover:scale-105 active:scale-95"
+              aria-controls="mobile-menu"
+              aria-expanded="false"
+            >
+              <!-- 汉堡图标（默认显示） -->
+              <svg id="icon-menu" class="h-6 w-6 block" xmlns="http://www.w3.org/2000/svg" fill="none"
+                   viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <!-- 关闭图标（默认隐藏） -->
+              <svg id="icon-close" class="h-6 w-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none"
+                   viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 手机端折叠菜单内容（默认隐藏，通过 JS 切换 hidden 类） -->
+        <div id="mobile-menu" class="md:hidden hidden border-t border-slate-200 pb-4">
+          <div class="pt-2 space-y-1">
+            <a href="index.html"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-primary/10 hover:text-primary
+                      transition-colors duration-150">
+              首页
+            </a>
+            <a href="activities.html"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-primary/10 hover:text-primary
+                      transition-colors duration-150">
+              活动通知
+            </a>
+            <a href="members.html"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-primary/10 hover:text-primary
+                      transition-colors duration-150">
+              学生会成员
+            </a>
+            <a href="feedback.html"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-primary/10 hover:text-primary
+                      transition-colors duration-150">
+              意见反馈
+            </a>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- 主体内容 -->
+    <main class="flex-1">
+      <!-- 顶部欢迎区 + 轮播图 -->
+      <section id="home" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
+        <!-- 顶部欢迎文字 -->
+        <div class="grid lg:grid-cols-2 gap-8 lg:gap-10 items-center mb-8 sm:mb-10">
+          <div>
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+              欢迎来到
+              <span class="text-primary">XX中学学生会</span>
+            </h1>
+            <p class="text-sm sm:text-base text-gray-600 leading-relaxed mb-4">
+              这里是连接学校与同学们的桥梁，我们致力于组织丰富多彩的校园活动，
+              倾听每一位同学的声音，共建温暖、积极、向上的校园文化。
+            </p>
+            <div class="flex flex-wrap items-center gap-3">
+              <!-- 立即查看活动按钮 -->
+              <a href="#notices"
+                 class="inline-flex items-center justify-center px-4 sm:px-5 py-2.5 rounded-full
+                        bg-primary text-white text-sm sm:text-base font-medium
+                        shadow-soft
+                        hover:bg-primary-dark hover:-translate-y-0.5 hover:shadow-lg
+                        active:translate-y-0
+                        transition transform duration-200">
+                查看最新活动通知
+              </a>
+              <!-- 反馈按钮（次要按钮） -->
+              <a href="feedback.html"
+                 class="inline-flex items-center justify-center px-4 sm:px-5 py-2.5 rounded-full
+                        border border-primary text-primary text-sm sm:text-base font-medium
+                        bg-white
+                        hover:bg-primary/5 hover:-translate-y-0.5 hover:shadow-md
+                        active:translate-y-0
+                        transition transform duration-200">
+                提交意见与建议
+              </a>
+            </div>
+          </div>
+
+          <!-- 右侧轮播图 -->
+          <!--
+            轮播图简单实现说明：
+            - 外层容器：相对定位，固定高度（手机端较矮，桌面端更高）
+            - 内部的每一张图片幻灯片：绝对定位，全部叠在一起，通过 JS 控制透明度和层级
+            - 使用 JavaScript 每隔 4 秒切换一张图片
+          -->
+          <div class="relative w-full h-56 sm:h-64 lg:h-72 rounded-2xl overflow-hidden shadow-soft bg-slate-200">
+            <!-- 轮播图包裹容器，供 JS 选择和操作 -->
+            <div id="carousel" class="w-full h-full relative">
+              <!-- 第 1 张 幻灯片（可以替换成真实图片） -->
+              <div class="carousel-slide absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100">
+                <!-- 使用背景图占位，也可以改成 <img> -->
+                <div class="w-full h-full bg-cover bg-center"
+                     style="background-image: url('https://images.pexels.com/photos/3184398/pexels-photo-3184398.jpeg?auto=compress&cs=tinysrgb&w=1200');">
+                </div>
+                <!-- 图片上的标题文字 -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent"></div>
+                <div class="absolute bottom-4 left-4 right-4 text-white">
+                  <h3 class="text-lg sm:text-xl font-semibold mb-1">
+                    校园科技节
+                  </h3>
+                  <p class="text-xs sm:text-sm text-slate-100">
+                    探索科技魅力，展示同学们的创新与实践能力。
+                  </p>
+                </div>
+              </div>
+
+              <!-- 第 2 张 幻灯片 -->
+              <div class="carousel-slide absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0">
+                <div class="w-full h-full bg-cover bg-center"
+                     style="background-image: url('https://images.pexels.com/photos/1720186/pexels-photo-1720186.jpeg?auto=compress&cs=tinysrgb&w=1200');">
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent"></div>
+                <div class="absolute bottom-4 left-4 right-4 text-white">
+                  <h3 class="text-lg sm:text-xl font-semibold mb-1">
+                    校园艺术节
+                  </h3>
+                  <p class="text-xs sm:text-sm text-slate-100">
+                    音乐、舞蹈、绘画，多彩艺术点亮校园生活。
+                  </p>
+                </div>
+              </div>
+
+              <!-- 第 3 张 幻灯片 -->
+              <div class="carousel-slide absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0">
+                <div class="w-full h-full bg-cover bg-center"
+                     style="background-image: url('https://images.pexels.com/photos/1205651/pexels-photo-1205651.jpeg?auto=compress&cs=tinysrgb&w=1200');">
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent"></div>
+                <div class="absolute bottom-4 left-4 right-4 text-white">
+                  <h3 class="text-lg sm:text-xl font-semibold mb-1">
+                    社团风采展
+                  </h3>
+                  <p class="text-xs sm:text-sm text-slate-100">
+                    百花齐放，各类学生社团集中展示精彩活动。
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 轮播图下方小圆点指示器 -->
+            <div class="absolute bottom-3 left-0 right-0 flex justify-center space-x-2">
+              <!-- 通过 JS 给当前激活的小圆点加 bg-white，其余为白色透明度较低 -->
+              <span class="carousel-dot w-2.5 h-2.5 rounded-full bg-white"></span>
+              <span class="carousel-dot w-2.5 h-2.5 rounded-full bg-white/50"></span>
+              <span class="carousel-dot w-2.5 h-2.5 rounded-full bg-white/50"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 最新通知模块 -->
+        <section id="notices" class="mt-6 sm:mt-8 lg:mt-10">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">
+              最新通知
+            </h2>
+            <span class="hidden sm:inline-flex items-center text-xs text-gray-500">
+              按时间倒序显示最近通知
+            </span>
+          </div>
+
+          <!-- 通知列表容器：由 /api/get_notices 动态填充 -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <ul id="notices-list" class="divide-y divide-slate-100">
+              <li class="px-4 sm:px-6 py-4 text-center text-gray-500 text-sm">加载中…</li>
+            </ul>
+          </div>
+        </section>
+      </section>
+
+      <!-- 学生会成员模块（这里只做一个简单占位，后续可以自己补充表格或卡片） -->
+      <section id="members" class="bg-white border-t border-slate-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
+          <h2 class="text-xl sm:text-2xl font-semibold text-gray-900 mb-4">
+            学生会成员
+          </h2>
+          <p class="text-sm sm:text-base text-gray-600 mb-4">
+            这里可以展示学生会主席团、各部门部长和干事名单，方便同学了解各部门职责与联系方式。
+          </p>
+
+          <!-- 简单示例布局：三列卡片，手机端自动换行 -->
+          <div class="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <!-- 主席团 -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:shadow-md hover:-translate-y-0.5 transition duration-200">
+              <h3 class="text-base sm:text-lg font-semibold text-primary mb-2">
+                主席团
+              </h3>
+              <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                学生会整体工作的统筹与协调，对重大活动进行策划与决策。
+              </p>
+            </div>
+
+            <!-- 学习部 -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:shadow-md hover:-translate-y-0.5 transition duration-200">
+              <h3 class="text-base sm:text-lg font-semibold text-primary mb-2">
+                学习部
+              </h3>
+              <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                负责学习经验交流、学习互助活动、学风建设相关工作。
+              </p>
+            </div>
+
+            <!-- 生活部 -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:shadow-md hover:-translate-y-0.5 transition duration-200">
+              <h3 class="text-base sm:text-lg font-semibold text-primary mb-2">
+                生活部
+              </h3>
+              <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                关注同学在校生活情况，反馈食堂、宿舍等方面的建议与问题。
+              </p>
+            </div>
+
+            <!-- 文体部 -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:shadow-md hover:-translate-y-0.5 transition duration-200">
+              <h3 class="text-base sm:text-lg font-semibold text-primary mb-2">
+                文体部
+              </h3>
+              <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                组织文艺演出、体育比赛等活动，丰富同学课余生活。
+              </p>
+            </div>
+
+            <!-- 宣传部 -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:shadow-md hover:-translate-y-0.5 transition duration-200">
+              <h3 class="text-base sm:text-lg font-semibold text-primary mb-2">
+                宣传部
+              </h3>
+              <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                负责活动宣传、海报设计、新媒体运营等相关工作。
+              </p>
+            </div>
+
+            <!-- 纪检部 -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:shadow-md hover:-translate-y-0.5 transition duration-200">
+              <h3 class="text-base sm:text-lg font-semibold text-primary mb-2">
+                纪检部
+              </h3>
+              <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                协助学校维持良好纪律，对违规行为进行提醒与记录。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 意见反馈模块（简单表单，前端演示用，不做真实提交） -->
+      <section id="feedback" class="bg-slate-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
+          <h2 class="text-xl sm:text-2xl font-semibold text-gray-900 mb-4">
+            意见反馈
+          </h2>
+          <p class="text-sm sm:text-base text-gray-600 mb-4">
+            如果你对学校或学生会的工作有任何建议、想法或困惑，欢迎在这里留言，我们会认真查看并尽力改进。
+          </p>
+
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:p-7">
+            <form
+              onsubmit="event.preventDefault(); alert('已成功模拟提交！实际开发时可以在这里接入后端接口。');"
+              class="space-y-4"
+            >
+              <!-- 姓名 -->
+              <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+                  姓名（可选）
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  class="block w-full rounded-lg border border-slate-300 bg-slate-50
+                         px-3 py-2 text-sm sm:text-base text-gray-900
+                         focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+                         transition"
+                  placeholder="请输入你的姓名，或留空"
+                />
+              </div>
+
+              <!-- 班级 -->
+              <div>
+                <label for="class" class="block text-sm font-medium text-gray-700 mb-1">
+                  班级（可选）
+                </label>
+                <input
+                  id="class"
+                  type="text"
+                  class="block w-full rounded-lg border border-slate-300 bg-slate-50
+                         px-3 py-2 text-sm sm:text-base text-gray-900
+                         focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+                         transition"
+                  placeholder="例如：初二（3）班"
+                />
+              </div>
+
+              <!-- 反馈内容 -->
+              <div>
+                <label for="message" class="block text-sm font-medium text-gray-700 mb-1">
+                  反馈内容（必填）
+                </label>
+                <textarea
+                  id="message"
+                  rows="4"
+                  required
+                  class="block w-full rounded-lg border border-slate-300 bg-slate-50
+                         px-3 py-2 text-sm sm:text-base text-gray-900
+                         focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+                         transition resize-none"
+                  placeholder="请写下你的意见、建议或想法……"
+                ></textarea>
+              </div>
+
+              <!-- 提交按钮 -->
+              <div class="pt-2">
+                <button
+                  type="submit"
+                  class="inline-flex items-center justify-center px-5 py-2.5 rounded-full
+                         bg-primary text-white text-sm sm:text-base font-medium
+                         shadow-soft
+                         hover:bg-primary-dark hover:-translate-y-0.5 hover:shadow-lg
+                         active:translate-y-0
+                         transition transform duration-200"
+                >
+                  提交反馈（示例）
+                </button>
+              </div>
+
+              <p class="text-xs text-gray-500">
+                注：当前页面仅为前端示例，点击提交后不会真实保存到服务器，实际使用时需要后端接口配合。
+              </p>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 页面底部信息区域 -->
+    <footer class="bg-primary-dark text-white mt-6">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div class="text-sm sm:text-base font-medium">
+          XX中学学生会
+        </div>
+        <div class="text-xs sm:text-sm text-slate-100">
+          联系电话：12345678
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 页面交互逻辑（JavaScript） -->
+  <script>
+    // ===============================
+    // 1. 手机端汉堡菜单展开/收起
+    // ===============================
+    (function () {
+      // 获取相关 DOM 元素
+      var menuButton = document.getElementById('mobile-menu-button');
+      var mobileMenu = document.getElementById('mobile-menu');
+      var iconMenu = document.getElementById('icon-menu');
+      var iconClose = document.getElementById('icon-close');
+
+      if (!menuButton || !mobileMenu) return; // 保险判断，避免报错
+
+      menuButton.addEventListener('click', function () {
+        // 通过切换 hidden 类来显示/隐藏菜单
+        var isHidden = mobileMenu.classList.contains('hidden');
+
+        if (isHidden) {
+          mobileMenu.classList.remove('hidden');
+          menuButton.setAttribute('aria-expanded', 'true');
+          // 图标切换：隐藏汉堡图标，显示关闭图标
+          iconMenu.classList.add('hidden');
+          iconClose.classList.remove('hidden');
+        } else {
+          mobileMenu.classList.add('hidden');
+          menuButton.setAttribute('aria-expanded', 'false');
+          iconMenu.classList.remove('hidden');
+          iconClose.classList.add('hidden');
+        }
+      });
+    })();
+
+    // ===============================
+    // 2. 轮播图自动切换逻辑
+    // ===============================
+    (function () {
+      var carousel = document.getElementById('carousel');
+      if (!carousel) return;
+
+      // 所有幻灯片元素
+      var slides = carousel.querySelectorAll('.carousel-slide');
+      // 小圆点指示器
+      var dots = document.querySelectorAll('.carousel-dot');
+      var currentIndex = 0;
+      var total = slides.length;
+      var interval = 4000; // 切换时间间隔：4000 毫秒 = 4 秒
+
+      // 切换到指定索引的幻灯片
+      function goToSlide(index) {
+        // 越界处理（最后一张再往后就回到第 0 张）
+        if (index < 0) index = total - 1;
+        if (index >= total) index = 0;
+
+        // 遍历所有幻灯片，设置透明度
+        slides.forEach(function (slide, i) {
+          if (i === index) {
+            slide.style.opacity = '1';
+            slide.style.zIndex = '10';
+          } else {
+            slide.style.opacity = '0';
+            slide.style.zIndex = '0';
+          }
+        });
+
+        // 更新小圆点状态
+        if (dots && dots.length === total) {
+          dots.forEach(function (dot, i) {
+            if (i === index) {
+              dot.classList.remove('bg-white/50');
+              dot.classList.add('bg-white');
+            } else {
+              dot.classList.remove('bg-white');
+              dot.classList.add('bg-white/50');
+            }
+          });
+        }
+
+        // 更新当前索引
+        currentIndex = index;
+      }
+
+      // 自动轮播：每隔 interval 毫秒切换到下一张
+      function startAutoPlay() {
+        setInterval(function () {
+          goToSlide(currentIndex + 1);
+        }, interval);
+      }
+
+      // 初始化：一开始显示第 0 张
+      goToSlide(0);
+      // 启动自动轮播
+      startAutoPlay();
+    })();
+
+    // ===============================
+    // 3. 从后端加载最新通知（使用 axios 调用 /api/get_notices）
+    // ===============================
+    (function () {
+      var el = document.getElementById('notices-list');
+      if (!el) return;
+      
+      getNotices()
+        .then(function (response) {
+          var arr = (response && response.data) ? response.data : [];
+          if (!arr || !arr.length) {
+            el.innerHTML = '<li class="px-4 sm:px-6 py-4 text-center text-gray-500 text-sm">暂无通知</li>';
+            return;
+          }
+          el.innerHTML = arr.map(function (n, i) {
+            var title = (n.title || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            var content = (n.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            var time = (n.publish_time || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            var badge = i === 0 ? '<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">最新</span>' : '';
+            var titleBlock = badge ? '<div class="flex items-center gap-2">' + badge + '<p class="text-sm sm:text-base font-medium text-gray-900">' + title + '</p></div>' : '<p class="text-sm sm:text-base font-medium text-gray-900">' + title + '</p>';
+            return '<li class="px-4 sm:px-6 py-4 hover:bg-slate-50 transition-colors duration-150"><div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">' + titleBlock + '<p class="text-xs text-gray-500">发布时间：' + time + '</p></div><p class="mt-1.5 text-xs sm:text-sm text-gray-600">' + content + '</p></li>';
+          }).join('');
+        })
+        .catch(function (error) {
+          console.error('加载通知失败:', error);
+          el.innerHTML = '<li class="px-4 sm:px-6 py-4 text-center text-gray-500 text-sm">加载失败，请刷新重试</li>';
+        });
+    })();
+  </script>
+</body>
+</html>
