@@ -10,7 +10,7 @@
   // 后端地址：通过 Flask 打开页面时用相对路径即可（同源）；若本地直接打开 HTML 则改为 'http://127.0.0.1:5000'
   window.API_BASE = (function () {
     if (typeof location !== 'undefined' && location.protocol === 'file:') {
-      return 'http://127.0.0.1:5000';
+      return 'https://replit.com/@nce4xu/Student-Backend#app.py';
     }
     return '';
   })();
